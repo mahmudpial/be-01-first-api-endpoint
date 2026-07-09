@@ -1,59 +1,148 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BE-01 — First API Endpoint
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **FlyRank AI Internship** — Backend AI Engineering Track
+> Assignment `BE-01` · Week 1 · Setup Phase
 
-## About Laravel
+A minimal Laravel REST API demonstrating two JSON endpoints, built and deployed as an introduction to the request → response lifecycle and the publish-to-GitHub workflow used throughout this program.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Live API:** https://be-01-first-api-endpoint.onrender.com/api/v1/
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Overview
 
-## Learning Laravel
+This project is intentionally small: two `GET` endpoints that return JSON, callable from `curl`, a browser, or Postman. The goal wasn't complexity — it was to make the request/response loop tangible and to establish the publish-to-GitHub habit from day one.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+On top of the core requirement, the API is organized using standard Laravel/REST conventions (versioned routes, a dedicated controller, a consistent response envelope) rather than inline route closures — a small step toward how production APIs are typically structured.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Endpoints
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Method | Endpoint        | Description                                          |
+| ------ | --------------- | ---------------------------------------------------- |
+| `GET`  | `/api/v1/`      | Confirms the API is online                           |
+| `GET`  | `/api/v1/greet` | Returns developer info and a categorized skill stack |
 
-## Agentic Development
+### Example: `GET /api/v1/`
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```json
+{
+    "status": "success",
+    "data": {
+        "message": "Welcome to my first API endpoint",
+        "status": "online"
+    },
+    "meta": {
+        "timestamp": "2026-07-10T05:35:00+00:00"
+    }
+}
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Example: `GET /api/v1/greet`
 
-## Contributing
+```json
+{
+    "status": "success",
+    "data": {
+        "name": "Pial Mahmud",
+        "role": "Backend Intern",
+        "bio": "Full-stack engineer focused on Laravel backends and Vue.js frontends.",
+        "skills": {
+            "languages": ["JavaScript", "PHP"],
+            "frameworks": ["Laravel", "Vue.js"],
+            "backend": [
+                "REST API design",
+                "JWT authentication",
+                "Authentication systems",
+                "ORM (Eloquent)",
+                "Repository pattern",
+                "OOP",
+                "Data Structures & Algorithms"
+            ],
+            "database": ["MySQL", "Database design"],
+            "integration": ["Third-party API integration", "AI integration"],
+            "tools": ["Git & GitHub", "Postman", "Docker"],
+            "deployment": ["Vercel", "Render"]
+        },
+        "currently_learning": "Backend AI Engineering"
+    },
+    "meta": {
+        "timestamp": "2026-07-10T05:35:00+00:00"
+    }
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Tech Stack
 
-## Code of Conduct
+- **Framework:** Laravel 13 (PHP 8.4)
+- **Deployment:** Docker → Render (Web Service)
+- **Version control:** Git & GitHub
+- **Testing tools:** curl, browser, Postman
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Project Structure (relevant files)
 
-## Security Vulnerabilities
+```
+app/Http/Controllers/Api/V1/WelcomeController.php   # Endpoint logic
+routes/api.php                                       # Versioned route definitions
+Dockerfile                                            # Container build for deployment
+render.yaml                                           # Render service definition
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Local Setup
 
-## License
+```bash
+git clone https://github.com/<your-username>/be-01-first-api-endpoint.git
+cd be-01-first-api-endpoint
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# be-01-first-api-endpoint
+composer install
+cp .env.example .env
+php artisan key:generate
+
+php artisan serve
+```
+
+The API will be available at `http://127.0.0.1:8000/api/v1/`.
+
+## Testing
+
+**curl:**
+
+```bash
+curl http://127.0.0.1:8000/api/v1/
+curl http://127.0.0.1:8000/api/v1/greet
+```
+
+**Browser:**
+Open `http://127.0.0.1:8000/api/v1/greet` directly.
+
+**Postman:**
+Import the two `GET` requests above into a collection to inspect status codes, headers, and response time.
+
+## Deployment
+
+Deployed on [Render](https://render.com) as a Dockerized web service:
+
+- Base image: `php:8.4-cli` (required by Laravel 13 / Symfony 8 dependencies)
+- Build: `composer install --no-dev --optimize-autoloader`
+- Start: `php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=$PORT`
+
+Any push to `main` triggers an automatic redeploy.
+
+## Assignment Context
+
+| Field    | Value                  |
+| -------- | ---------------------- |
+| Type     | Assignment             |
+| Code     | BE-01                  |
+| Track    | Backend AI Engineering |
+| Week     | 1                      |
+| Workload | ~3h                    |
+| Phase    | Setup                  |
+
+**Goal:** Build the smallest possible backend — a server with two JSON endpoints — call it from curl and a browser, and publish it to a public GitHub repository.
+
+## 👤 Author
+
+**Pial Mahmud**
+Full-Stack Web Developer · Backend AI Engineering Intern, FlyRank AI
+
+[GitHub](https://github.com/mahmudpial) | [LinkedIn](https://www.linkedin.com/in/pial-mahmud/)
