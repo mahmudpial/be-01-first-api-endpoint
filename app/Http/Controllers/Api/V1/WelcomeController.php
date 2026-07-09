@@ -14,7 +14,7 @@ class WelcomeController extends Controller
     public function index(): JsonResponse
     {
         return $this->success([
-            'message' => 'Welcome to my first API endpoint 🚀',
+            'message' => 'Welcome to my first API endpoint',
             'status' => 'online',
         ]);
     }
