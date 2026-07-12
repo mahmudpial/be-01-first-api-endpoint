@@ -9,8 +9,10 @@ RUN apk add --no-cache \
     postgresql-dev \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip gd \
-    && docker-php-ext-enable pdo pdo_pgsql pdo_mysql
+    curl
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_pgsql pdo_mysql zip gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -29,9 +31,12 @@ RUN composer dump-autoload --optimize
 # Laravel needs writable storage/cache directories
 RUN chmod -R 775 storage bootstrap/cache
 
-# Create nginx config
+# Remove default nginx config
+RUN rm -f /etc/nginx/conf.d/default.conf /etc/nginx/http.d/default.conf
+
+# Create custom nginx config
 RUN mkdir -p /etc/nginx/conf.d && \
-    cat > /etc/nginx/conf.d/default.conf <<'EOF'
+    cat > /etc/nginx/conf.d/laravel.conf <<'EOF'
 server {
     listen 10000;
     server_name _;
@@ -55,18 +60,52 @@ server {
 }
 EOF
 
-# Supervisor config for running both nginx and php-fpm
+# Create main nginx config
+RUN cat > /etc/nginx/nginx.conf <<'EOF'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    client_max_body_size 20M;
+
+    include /etc/nginx/conf.d/*.conf;
+}
+EOF
+
+# Create Supervisor config
 RUN mkdir -p /etc/supervisor/conf.d && \
     cat > /etc/supervisor/conf.d/supervisord.conf <<'EOF'
 [supervisord]
 nodaemon=true
 logfile=/dev/null
+loglevel=info
 pidfile=/var/run/supervisord.pid
+user=root
 
 [program:php-fpm]
 command=/usr/local/sbin/php-fpm -F
 autostart=true
 autorestart=true
+priority=999
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
@@ -76,6 +115,7 @@ stderr_logfile_maxbytes=0
 command=/usr/sbin/nginx -g "daemon off;"
 autostart=true
 autorestart=true
+priority=998
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
@@ -84,7 +124,4 @@ EOF
 
 EXPOSE 10000
 
-# Install supervisor
-RUN apk add --no-cache supervisor
-
-CMD sh -c 'php artisan config:cache && php artisan route:cache && supervisord -c /etc/supervisor/conf.d/supervisord.conf'
+CMD sh -c 'php artisan config:cache && php artisan route:cache && php artisan migrate --force && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf'
