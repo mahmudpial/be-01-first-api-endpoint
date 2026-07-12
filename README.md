@@ -1,148 +1,294 @@
-# BE-01 — First API Endpoint
+# First API Endpoint - Postgres Persistence & Repository Pattern
 
-> **FlyRank AI Internship** — Backend AI Engineering Track
-> Assignment `BE-01` · Week 1 · Setup Phase
+A Laravel 13 API demonstrating **persistent data storage with Postgres**, **repository pattern architecture**, and **containerized deployment**.
 
-A minimal Laravel REST API demonstrating two JSON endpoints, built and deployed as an introduction to the request → response lifecycle and the publish-to-GitHub workflow used throughout this program.
+## Key Features
 
-**Live API:** https://be-01-first-api-endpoint.onrender.com/api/v1/
+- **Postgres Persistence**: Data survives container restarts via named volumes
+- **Repository Pattern**: Swappable storage backends (Postgres/In-Memory) — services and routes unchanged
+- **Docker Compose**: Full stack (app + Postgres + Redis) starts with `docker compose up`
+- **Health Checks**: Container orchestration-ready with liveness/readiness probes
+- **Redis Integration**: Optional caching layer included
+- **Index Performance**: Database indexes with EXPLAIN ANALYZE demonstrations
+- **API Versioning**: Future-proof versioned endpoints (/api/v1/)
 
----
+## Architecture
 
-## Overview
+### Repository Pattern (Proof of Architecture)
 
-This project is intentionally small: two `GET` endpoints that return JSON, callable from `curl`, a browser, or Postman. The goal wasn't complexity — it was to make the request/response loop tangible and to establish the publish-to-GitHub habit from day one.
-
-On top of the core requirement, the API is organized using standard Laravel/REST conventions (versioned routes, a dedicated controller, a consistent response envelope) rather than inline route closures — a small step toward how production APIs are typically structured.
-
-## Endpoints
-
-| Method | Endpoint        | Description                                          |
-| ------ | --------------- | ---------------------------------------------------- |
-| `GET`  | `/api/v1/`      | Confirms the API is online                           |
-| `GET`  | `/api/v1/greet` | Returns developer info and a categorized skill stack |
-
-### Example: `GET /api/v1/`
-
-```json
-{
-    "status": "success",
-    "data": {
-        "message": "Welcome to my first API endpoint",
-        "status": "online"
-    },
-    "meta": {
-        "timestamp": "2026-07-10T05:35:00+00:00"
-    }
-}
-```
-
-### Example: `GET /api/v1/greet`
-
-```json
-{
-    "status": "success",
-    "data": {
-        "name": "Pial Mahmud",
-        "role": "Backend Intern",
-        "bio": "Full-stack engineer focused on Laravel backends and Vue.js frontends.",
-        "skills": {
-            "languages": ["JavaScript", "PHP"],
-            "frameworks": ["Laravel", "Vue.js"],
-            "backend": [
-                "REST API design",
-                "JWT authentication",
-                "Authentication systems",
-                "ORM (Eloquent)",
-                "Repository pattern",
-                "OOP",
-                "Data Structures & Algorithms"
-            ],
-            "database": ["MySQL", "Database design"],
-            "integration": ["Third-party API integration", "AI integration"],
-            "tools": ["Git & GitHub", "Postman", "Docker"],
-            "deployment": ["Vercel", "Render"]
-        },
-        "currently_learning": "Backend AI Engineering"
-    },
-    "meta": {
-        "timestamp": "2026-07-10T05:35:00+00:00"
-    }
-}
-```
-
-## Tech Stack
-
-- **Framework:** Laravel 13 (PHP 8.4)
-- **Deployment:** Docker → Render (Web Service)
-- **Version control:** Git & GitHub
-- **Testing tools:** curl, browser, Postman
-
-## Project Structure (relevant files)
+The service layer depends on an abstraction, not concrete implementations:
 
 ```
-app/Http/Controllers/Api/V1/WelcomeController.php   # Endpoint logic
-routes/api.php                                       # Versioned route definitions
-Dockerfile                                            # Container build for deployment
-render.yaml                                           # Render service definition
+PostController → PostRepository (interface)
+                      ↙         ↘
+            PostgresPostRepository  InMemoryPostRepository
 ```
 
-## Local Setup
+**This proves the architecture works**: You can swap `PostgresPostRepository` for `InMemoryPostRepository` in `PostRepositoryServiceProvider.php` without changing a single route or service method.
+
+#### Implementation
+
+1. **Interface** (`app/Contracts/PostRepository.php`)
+   - Defines contract: `all()`, `getById()`, `create()`, `update()`, `delete()`, `getByAuthor()`, `count()`
+
+2. **Postgres Implementation** (`app/Repositories/PostgresPostRepository.php`)
+   - Uses Eloquent ORM against persistent Postgres tables
+   - Data survives container restarts via volume `/var/lib/postgresql/data`
+
+3. **In-Memory Implementation** (`app/Repositories/InMemoryPostRepository.php`)
+   - Uses PHP arrays — data lost on app restart
+   - Useful for testing or demonstration
+
+4. **Service Provider** (`app/Providers/PostRepositoryServiceProvider.php`)
+   - Single line to swap backends: change the class binding
+
+### Database
+
+**Postgres 16** runs in a container with:
+- Named volume `pgdata` → data persists across restarts
+- Init script (`database/init.sql`) creates `posts` table with indices
+- Indexes on `author` and `created_at` for query optimization
+- Seeded with 3 sample posts
+
+### Redis
+
+**Redis 7** included for caching/sessions:
+- Accessible via `redis://redis:6379` in docker-compose
+- Health check integrated into app startup
+
+## Quick Start
+
+### Prerequisites
+
+- Docker & Docker Compose installed
+- `.env` file with connection strings (see `.env.example`)
+
+### Run the Stack
 
 ```bash
-git clone https://github.com/<your-username>/be-01-first-api-endpoint.git
-cd be-01-first-api-endpoint
+# Start all services (app + Postgres + Redis)
+docker compose up
 
-composer install
-cp .env.example .env
-php artisan key:generate
+# Migrations run automatically on startup
 
-php artisan serve
+# Check health
+curl http://localhost:10000/api/v1/health
 ```
 
-The API will be available at `http://127.0.0.1:8000/api/v1/`.
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/posts` | List all posts |
+| POST | `/api/v1/posts` | Create a post |
+| GET | `/api/v1/posts/{id}` | Get post by ID |
+| PUT | `/api/v1/posts/{id}` | Update post |
+| DELETE | `/api/v1/posts/{id}` | Delete post |
+| GET | `/api/v1/posts/author/{author}` | Get posts by author |
+| GET | `/api/v1/health` | Health check (database + Redis) |
+
+### Create a Post
+
+```bash
+curl -X POST http://localhost:10000/api/v1/posts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My First Post",
+    "content": "This data persists across container restarts!",
+    "author": "Your Name"
+  }'
+```
+
+### Persistence Test
+
+Run the provided script to prove data survives a container restart:
+
+```bash
+./persistence-test.sh
+```
+
+**What it does:**
+1. Creates a test post
+2. Lists posts
+3. Stops containers
+4. Restarts containers
+5. Lists posts again — the test post is still there ✓
+
+### Performance Analysis
+
+Show database indexes and EXPLAIN ANALYZE output:
+
+```bash
+./explain-analysis.sh
+```
+
+**What it shows:**
+- 10,000 posts seeded in database
+- EXPLAIN ANALYZE output with index `idx_posts_author`
+- Index definitions on `posts` table
+- Query results filtered by author (benefiting from index)
+
+## Environment Variables
+
+**Required in `.env` (use `.env.example` as template):**
+
+```
+DB_CONNECTION=pgsql
+DB_HOST=db                  # Docker service name
+DB_PORT=5432
+DB_DATABASE=be01
+DB_USERNAME=postgres
+DB_PASSWORD=secret
+
+REDIS_HOST=redis            # Docker service name
+REDIS_PORT=6379
+
+APP_DEBUG=true
+APP_ENV=local
+```
+
+**Important**: `.env` is gitignored. Commit `.env.example` instead.
+
+## Swapping Repositories (Architecture Proof)
+
+To use the **in-memory repository** instead of Postgres:
+
+**File**: `app/Providers/PostRepositoryServiceProvider.php`
+
+```php
+public function register(): void
+{
+    // Change this line:
+    // $this->app->singleton(PostRepository::class, PostgresPostRepository::class);
+    
+    // To this:
+    $this->app->singleton(PostRepository::class, InMemoryPostRepository::class);
+}
+```
+
+**Then restart:**
+```bash
+docker compose restart app
+```
+
+**Result**: All routes and services work identically. Only the backend changes. This proves the architecture.
 
 ## Testing
 
-**curl:**
-
 ```bash
-curl http://127.0.0.1:8000/api/v1/
-curl http://127.0.0.1:8000/api/v1/greet
+# Run tests
+docker compose exec app php artisan test
+
+# Run specific test
+docker compose exec app php artisan test tests/Feature/PostApiTest.php
 ```
 
-**Browser:**
-Open `http://127.0.0.1:8000/api/v1/greet` directly.
+## Database Migrations
 
-**Postman:**
-Import the two `GET` requests above into a collection to inspect status codes, headers, and response time.
+Migrations run automatically on app startup via:
 
-## Deployment
+```bash
+php artisan migrate --force
+```
 
-Deployed on [Render](https://render.com) as a Dockerized web service:
+## Volumes
 
-- Base image: `php:8.4-cli` (required by Laravel 13 / Symfony 8 dependencies)
-- Build: `composer install --no-dev --optimize-autoloader`
-- Start: `php artisan config:cache && php artisan route:cache && php artisan serve --host=0.0.0.0 --port=$PORT`
+Data persists in:
+- **`pgdata`**: Postgres database files (`/var/lib/postgresql/data`)
+- **`redis_data`**: Redis data (`/data`)
 
-Any push to `main` triggers an automatic redeploy.
+Clear persistent data:
+```bash
+docker compose down -v
+```
 
-## Assignment Context
+## Files
 
-| Field    | Value                  |
-| -------- | ---------------------- |
-| Type     | Assignment             |
-| Code     | BE-01                  |
-| Track    | Backend AI Engineering |
-| Week     | 1                      |
-| Workload | ~3h                    |
-| Phase    | Setup                  |
+- **Controllers**: `app/Http/Controllers/Api/V1/PostController.php`
+- **Models**: `app/Models/Post.php`
+- **Repositories**: `app/Repositories/{Postgres,InMemory}PostRepository.php`
+- **Interface**: `app/Contracts/PostRepository.php`
+- **Routes**: `routes/api.php`
+- **Tests**: `tests/Feature/PostApiTest.php`
+- **Init Script**: `database/init.sql`
+- **Compose File**: `docker-compose.yml`
 
-**Goal:** Build the smallest possible backend — a server with two JSON endpoints — call it from curl and a browser, and publish it to a public GitHub repository.
+## Docker Compose Breakdown
 
-## 👤 Author
+```yaml
+services:
+  app:
+    # Laravel app on port 10000
+    depends_on:
+      - db (healthcheck)
+      - redis (healthcheck)
+  
+  db:
+    # Postgres 16, volume pgdata for persistence
+    healthcheck: pg_isready
+  
+  redis:
+    # Redis 7-alpine, volume redis_data for persistence
+    healthcheck: redis-cli ping
 
-**Pial Mahmud**
-Full-Stack Web Developer · Backend AI Engineering Intern, FlyRank AI
+volumes:
+  pgdata:      # Persists /var/lib/postgresql/data
+  redis_data:  # Persists /data
+```
 
-[GitHub](https://github.com/mahmudpial) | [LinkedIn](https://www.linkedin.com/in/pial-mahmud/)
+## Stretch Goals
+
+✓ **Redis Added**: Health endpoint checks Redis connectivity  
+✓ **Indexes + EXPLAIN**: `idx_posts_author` and `idx_posts_created_at` with analysis script  
+✓ **Init Script**: `database/init.sql` creates schema + seeds data  
+✓ **Persistence Proven**: `persistence-test.sh` demonstrates data survives restarts  
+
+## How Persistence Works
+
+1. **Volume Binding**: `pgdata:/var/lib/postgresql/data` in `docker-compose.yml`
+2. **Postgres Writes**: All table data written to `/var/lib/postgresql/data` inside container
+3. **Host Storage**: Docker mounts this to the host filesystem (location varies by OS)
+4. **Restart Survival**: Even if the container dies, the volume persists
+5. **Reattachment**: New container attaches to the same volume, data is intact
+
+**Test it:**
+```bash
+# Create posts
+# Stop containers
+docker compose stop
+
+# Wait...
+
+# Start containers
+docker compose up
+
+# Posts still exist!
+curl http://localhost:10000/api/v1/posts
+```
+
+## Troubleshooting
+
+**Container won't start?**
+```bash
+docker compose logs app
+docker compose logs db
+```
+
+**Migrations failed?**
+```bash
+docker compose exec app php artisan migrate --fresh --force
+```
+
+**Data lost after restart?**
+- Check that `pgdata` volume exists: `docker volume ls`
+- Ensure `docker-compose.yml` has the volume mount
+
+**Health check failing?**
+```bash
+docker compose exec db pg_isready -U postgres
+docker compose exec redis redis-cli ping
+```
+
+## License
+
+MIT

@@ -1,0 +1,133 @@
+{
+  "info": {
+    "name": "First API - Persistence & Repository Pattern",
+    "description": "Full CRUD API demonstrating Postgres persistence and repository pattern",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Welcome",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1"]
+        }
+      }
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "health"]
+        }
+      }
+    },
+    {
+      "name": "List Posts",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts"]
+        }
+      }
+    },
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Persistence Test\",\n  \"content\": \"This data will survive container restarts thanks to Postgres volumes.\",\n  \"author\": \"Your Name\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts"]
+        }
+      }
+    },
+    {
+      "name": "Get Post by ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts", "1"]
+        }
+      }
+    },
+    {
+      "name": "Update Post",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated Title\",\n  \"content\": \"Updated content\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts", "1"]
+        }
+      }
+    },
+    {
+      "name": "Delete Post",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get Posts by Author",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:10000/api/v1/posts/author/Pial%20Mahmud",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "10000",
+          "path": ["api", "v1", "posts", "author", "Pial%20Mahmud"]
+        }
+      }
+    }
+  ]
+}

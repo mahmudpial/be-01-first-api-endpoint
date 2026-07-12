@@ -16,6 +16,7 @@ class WelcomeController extends Controller
         return $this->success([
             'message' => 'Welcome to my first API endpoint',
             'status' => 'online',
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -42,7 +43,7 @@ class WelcomeController extends Controller
                     'OOP',
                     'Data Structures & Algorithms',
                 ],
-                'database' => ['MySQL', 'Database design'],
+                'database' => ['MySQL', 'PostgreSQL', 'Database design'],
                 'integration' => ['Third-party API integration', 'AI integration'],
                 'tools' => ['Git & GitHub', 'Postman', 'Docker'],
                 'deployment' => ['Vercel', 'Render'],
@@ -61,6 +62,7 @@ class WelcomeController extends Controller
             'data' => $data,
             'meta' => [
                 'timestamp' => now()->toIso8601String(),
+                'version' => 'v1',
             ],
         ], $status);
     }
