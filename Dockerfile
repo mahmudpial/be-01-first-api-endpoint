@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     postgresql-dev \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip gd
+    && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip gd \
+    && docker-php-ext-enable pdo pdo_pgsql pdo_mysql
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -86,4 +87,4 @@ EXPOSE 10000
 # Install supervisor
 RUN apk add --no-cache supervisor
 
-CMD sh -c 'php artisan config:cache && php artisan route:cache && php artisan migrate --force && supervisord'
+CMD sh -c 'php artisan config:cache && php artisan route:cache && supervisord -c /etc/supervisor/conf.d/supervisord.conf'
