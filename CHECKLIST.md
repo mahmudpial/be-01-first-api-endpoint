@@ -3,6 +3,7 @@
 ## Core Requirements
 
 ### ✅ Postgres Persistence
+
 - [x] Postgres 16 runs in Docker container
 - [x] Named volume `pgdata` persists `/var/lib/postgresql/data`
 - [x] Volume survives container stop/restart
@@ -10,23 +11,26 @@
 - [x] Healthcheck validates connection
 
 ### ✅ Environment Configuration
+
 - [x] `.env` is gitignored
 - [x] `.env.example` is committed with all required variables
 - [x] Connection string configured:
-  - DB_CONNECTION=pgsql
-  - DB_HOST=db
-  - DB_PORT=5432
-  - DB_DATABASE=be01
-  - DB_USERNAME=postgres
-  - DB_PASSWORD=secret
+    - DB_CONNECTION=pgsql
+    - DB_HOST=db
+    - DB_PORT=5432
+    - DB_DATABASE=be01
+    - DB_USERNAME=postgres
+    - DB_PASSWORD=secret
 
 ### ✅ Database Initialization
+
 - [x] SQL init script: `database/init.sql`
 - [x] Creates `posts` table with proper schema
 - [x] Seeds 3 sample posts on first run
 - [x] Script runs automatically via docker-entrypoint-initdb.d
 
 ### ✅ Repository Pattern
+
 - [x] Interface: `app/Contracts/PostRepository.php`
 - [x] Postgres Implementation: `app/Repositories/PostgresPostRepository.php`
 - [x] In-Memory Implementation: `app/Repositories/InMemoryPostRepository.php`
@@ -34,6 +38,7 @@
 - [x] Service Provider enables swapping with one-line change
 
 ### ✅ Architecture Proof
+
 - [x] PostController uses interface, not concrete class
 - [x] Routes unchanged when swapping repositories
 - [x] Service methods unchanged when swapping repositories
@@ -41,6 +46,7 @@
 - [x] No other files require changes
 
 ### ✅ Docker Compose Stack
+
 - [x] Services: app, db, redis (3 services)
 - [x] `docker compose up` starts entire stack
 - [x] app depends on db and redis with healthchecks
@@ -49,6 +55,7 @@
 - [x] Environment variables passed via .env
 
 ### ✅ Persistence Verification
+
 - [x] Script: `persistence-test.sh`
 - [x] Creates test post before restart
 - [x] Restarts containers
@@ -60,6 +67,7 @@
 ## Stretch Goals
 
 ### ✅ Redis Integration
+
 - [x] Redis 7-alpine image in compose
 - [x] Named volume redis_data for persistence
 - [x] Service healthcheck: redis-cli ping
@@ -68,6 +76,7 @@
 - [x] Health controller returns redis status
 
 ### ✅ Database Indices + Performance
+
 - [x] Index 1: idx_posts_author (on author column)
 - [x] Index 2: idx_posts_created_at (on created_at DESC)
 - [x] Created in init.sql
@@ -81,6 +90,7 @@
 ## Implementation Files
 
 ### Core
+
 - [x] `app/Contracts/PostRepository.php` - Interface
 - [x] `app/Repositories/PostgresPostRepository.php` - Postgres impl
 - [x] `app/Repositories/InMemoryPostRepository.php` - In-memory impl
@@ -91,11 +101,13 @@
 - [x] `routes/api.php` - API routes (updated with Post endpoints)
 
 ### Database
+
 - [x] `database/init.sql` - Schema + indices + seed
 - [x] `database/migrations/2024_01_01_000001_create_sessions_table.php`
 - [x] `database/migrations/2024_01_01_000002_create_cache_table.php`
 
 ### Configuration
+
 - [x] `.env` - Runtime config (gitignored)
 - [x] `.env.example` - Template (committed)
 - [x] `docker-compose.yml` - Full stack definition
@@ -103,12 +115,14 @@
 - [x] `.dockerignore` - Build optimization
 
 ### Testing & Scripts
+
 - [x] `tests/Feature/PostApiTest.php` - CRUD tests + persistence
 - [x] `persistence-test.sh` - Restart verification
 - [x] `explain-analysis.sh` - Index performance demo
 - [x] `setup.sh` - One-command setup
 
 ### Documentation
+
 - [x] `README.md` - Complete guide (7819 bytes)
 - [x] `IMPLEMENTATION.md` - Detailed requirements (11132 bytes)
 - [x] `ARCHITECTURE.md` - Visual diagrams (17650 bytes)
@@ -119,6 +133,7 @@
 ## API Endpoints
 
 ### Working Endpoints
+
 - [x] GET `/api/v1/` - Welcome
 - [x] GET `/api/v1/greet` - Developer info
 - [x] GET `/api/v1/health` - Health + DB + Redis check
@@ -130,6 +145,7 @@
 - [x] GET `/api/v1/posts/author/{author}` - Filter by author
 
 ### Response Format
+
 - [x] JSON envelope: { status, data, meta }
 - [x] Timestamps in ISO 8601 format
 - [x] Version included in meta
@@ -142,6 +158,7 @@
 ## Database
 
 ### Schema ✅
+
 - [x] posts table created
 - [x] Columns: id, title, content, author, created_at, updated_at
 - [x] Primary key: id (auto-increment)
@@ -149,11 +166,13 @@
 - [x] Timestamps: created_at, updated_at
 
 ### Indices ✅
+
 - [x] idx_posts_author - B-tree on author
 - [x] idx_posts_created_at - B-tree on created_at DESC
 - [x] Both indexed in init.sql
 
 ### Data ✅
+
 - [x] Seed data: 3 posts on init
 - [x] Support for manual insertion
 - [x] Support for programmatic CRUD
@@ -164,6 +183,7 @@
 ## Testing
 
 ### Unit Tests ✅
+
 - [x] PostApiTest class
 - [x] test_list_posts
 - [x] test_create_post
@@ -175,12 +195,14 @@
 - [x] test_validation_required_fields
 
 ### Manual Testing ✅
+
 - [x] Postman collection provided
 - [x] curl examples in README
 - [x] Persistence test script
 - [x] Analysis script
 
 ### Integration Tests ✅
+
 - [x] Health endpoint tests
 - [x] API endpoint tests
 - [x] Validation tests
@@ -191,6 +213,7 @@
 ## Docker & Orchestration
 
 ### Dockerfile ✅
+
 - [x] Uses php:8.4-fpm-alpine (lightweight)
 - [x] Installs postgres-dev, nginx, supervisor
 - [x] Installs PDO extensions for both Postgres and MySQL
@@ -201,6 +224,7 @@
 - [x] Runs migrations on startup
 
 ### docker-compose.yml ✅
+
 - [x] Service: app (PHP-FPM + nginx)
 - [x] Service: db (Postgres 16)
 - [x] Service: redis (Redis 7-alpine)
@@ -212,12 +236,14 @@
 - [x] Networks: default bridge (implicit)
 
 ### Volumes ✅
+
 - [x] pgdata - Named volume for Postgres persistence
 - [x] redis_data - Named volume for Redis persistence
 - [x] Both survive container restart
 - [x] Both survive image rebuild
 
 ### Health Checks ✅
+
 - [x] app: wget /api/v1/health
 - [x] db: pg_isready
 - [x] redis: redis-cli ping
@@ -230,6 +256,7 @@
 ## Environment Setup
 
 ### Variables ✅
+
 - [x] APP_NAME, APP_ENV, APP_DEBUG, APP_KEY
 - [x] DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 - [x] REDIS_HOST, REDIS_PORT
@@ -237,6 +264,7 @@
 - [x] .env template matches compose config
 
 ### Secrets ✅
+
 - [x] .env not committed
 - [x] .env.example committed
 - [x] Secrets not hardcoded in code
@@ -247,6 +275,7 @@
 ## Documentation
 
 ### README.md ✅
+
 - [x] Overview of features
 - [x] Quick start guide
 - [x] API endpoints table
@@ -258,6 +287,7 @@
 - [x] Architecture overview
 
 ### IMPLEMENTATION.md ✅
+
 - [x] Requirements met checklist
 - [x] File structure documented
 - [x] Architecture flow explained
@@ -268,6 +298,7 @@
 - [x] Environment variables documented
 
 ### ARCHITECTURE.md ✅
+
 - [x] Repository pattern diagram
 - [x] Volume persistence flow
 - [x] Docker compose stack diagram
@@ -280,6 +311,7 @@
 ## Bonus Features
 
 ### Beyond Requirements ✅
+
 - [x] Redis integration (not just Postgres)
 - [x] Health endpoint with service status
 - [x] Comprehensive test suite
@@ -318,15 +350,17 @@
 ## Known Limitations & Design Decisions
 
 ### By Design ✅
+
 - [x] Uses Laravel's built-in ORM (Eloquent) not raw SQL
 - [x] Repository pattern adds layer but enables testing
 - [x] In-memory implementation doesn't seed — for testing only
 - [x] Health endpoint checks Redis but it's optional
 - [x] Migrations run automatically on app start
 - [x] Supervisor manages both nginx and PHP-FPM in one container
-  (Could be split into separate containers for production)
+      (Could be split into separate containers for production)
 
 ### Trade-offs ✅
+
 - [x] Lightweight Alpine images chosen for speed/size
 - [x] Single container for app (PHP + nginx) vs multi-container
 - [x] Named volumes (easier) vs bind mounts (live sync)
@@ -337,6 +371,7 @@
 ## Summary
 
 ✅ **All core requirements met:**
+
 - Postgres persistence with volumes
 - .env configuration (gitignored/.env.example)
 - Repository pattern with swappable backends
@@ -344,11 +379,13 @@
 - Persistence proven across restarts
 
 ✅ **All stretch goals met:**
+
 - Redis integrated
 - Indices created + EXPLAIN ANALYZE demonstrated
 - Performance analysis script included
 
 ✅ **Bonus deliverables:**
+
 - Comprehensive testing
 - 3 documentation files with diagrams
 - Automation scripts
@@ -356,6 +393,7 @@
 - Error handling & validation
 
 ✅ **Ready for production:**
+
 - Healthchecks on all services
 - Proper error responses
 - Database migrations
@@ -369,26 +407,26 @@
 If building on this:
 
 1. **Add authentication**
-   - JWT tokens
-   - Swap InMemoryPostRepository for UserRepository
+    - JWT tokens
+    - Swap InMemoryPostRepository for UserRepository
 
 2. **Add caching**
-   - Redis cache layer
-   - Create CachePostRepository decorator
+    - Redis cache layer
+    - Create CachePostRepository decorator
 
 3. **Add search**
-   - Elasticsearch integration
-   - Create ElasticsearchPostRepository
+    - Elasticsearch integration
+    - Create ElasticsearchPostRepository
 
 4. **Scale**
-   - Split app + nginx into separate containers
-   - Add load balancer
-   - Use Kubernetes
+    - Split app + nginx into separate containers
+    - Add load balancer
+    - Use Kubernetes
 
 5. **Monitor**
-   - Prometheus metrics
-   - Grafana dashboards
-   - ELK stack logging
+    - Prometheus metrics
+    - Grafana dashboards
+    - ELK stack logging
 
 ---
 
