@@ -5,9 +5,9 @@ A Laravel 13 API demonstrating **persistent data storage with Postgres**, **repo
 ## Key Features
 
 - **Postgres Persistence**: Data survives container restarts via named volumes
-- **Repository Pattern**: Swappable storage backends (Postgres/In-Memory) — services and routes unchanged
+- **Repository Pattern**: Swappable storage backends (Postgres/In-Memory) - services and routes unchanged
 - **Docker Compose**: Full stack (app + Postgres + Redis) starts with `docker compose up`
-- **Health Checks**: Container orchestration-ready with liveness/readiness probes
+- **Health Checks**: HTTP health endpoint for the app plus service checks for db and Redis
 - **Redis Integration**: Optional caching layer included
 - **Index Performance**: Database indexes with EXPLAIN ANALYZE demonstrations
 - **API Versioning**: Future-proof versioned endpoints (/api/v1/)
@@ -67,7 +67,7 @@ PostController → PostRepository (interface)
 
 ```bash
 # Start all services (app + Postgres + Redis)
-docker compose up
+docker compose up --build
 
 # Migrations run automatically on startup
 
@@ -114,6 +114,8 @@ Run the provided script to prove data survives a container restart:
 4. Restarts containers
 5. Lists posts again — the test post is still there ✓
 
+This is the exact behavior the assignment asks for: create rows, restart the app and database containers, then confirm the rows are still present.
+
 ### Performance Analysis
 
 Show database indexes and EXPLAIN ANALYZE output:
@@ -148,6 +150,7 @@ APP_ENV=local
 ```
 
 **Important**: `.env` is gitignored. Commit `.env.example` instead.
+The app container reads `.env` through `env_file` in `docker-compose.yml`.
 
 ## Swapping Repositories (Architecture Proof)
 
@@ -172,6 +175,12 @@ docker compose restart app
 ```
 
 **Result**: All routes and services work identically. Only the backend changes. This proves the architecture.
+
+## Submission Notes
+
+- The API keeps the same routes and service layer while swapping only the repository implementation.
+- Persistence is demonstrated with a container restart test, not just a database schema.
+- Docker Compose starts the app, database, and Redis together with one command.
 
 ## Testing
 
@@ -219,6 +228,7 @@ docker compose down -v
 services:
   app:
     # Laravel app on port 10000
+    # Uses a vendor volume so the bind mount does not hide Composer dependencies
     depends_on:
       - db (healthcheck)
       - redis (healthcheck)
@@ -226,7 +236,7 @@ services:
   db:
     # Postgres 16, volume pgdata for persistence
     healthcheck: pg_isready
-  
+
   redis:
     # Redis 7-alpine, volume redis_data for persistence
     healthcheck: redis-cli ping
@@ -234,11 +244,12 @@ services:
 volumes:
   pgdata:      # Persists /var/lib/postgresql/data
   redis_data:  # Persists /data
+  vendor:      # Keeps installed app dependencies available in the container
 ```
 
 ## Stretch Goals
 
-✓ **Redis Added**: Health endpoint checks Redis connectivity  
+✓ **Redis Added**: Redis service is included in Compose and checked by the stack
 ✓ **Indexes + EXPLAIN**: `idx_posts_author` and `idx_posts_created_at` with analysis script  
 ✓ **Init Script**: `database/init.sql` creates schema + seeds data  
 ✓ **Persistence Proven**: `persistence-test.sh` demonstrates data survives restarts  
